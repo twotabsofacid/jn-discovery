@@ -3,17 +3,9 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 0, 0, 0;
+  --background-end-rgb: 0, 0, 0;
 }
 
 body {
@@ -30,4 +22,165 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+input[type='checkbox'].tick {
+  appearance: none;
+  margin: 0;
+  font: inherit;
+  color: currentColor;
+  border: 0.15em solid currentColor;
+  border-radius: 0.15em;
+  transform: translateY(-0.075em);
+  display: grid;
+  place-content: center;
+  width: calc(80vw / 16 - 10px);
+  height: 24px;
+  margin: 1px;
+  cursor: pointer;
+}
+
+input[type='checkbox'].tick::before {
+  content: '';
+  width: calc(80vw / 16 - 14px);
+  height: 20px;
+  transform: scale(0);
+  transition: 120ms transform ease-in-out;
+  box-shadow: inset 1em 1em var(--form-control-color);
+  background-color: rgb(25, 200, 95);
+}
+
+input[type='checkbox'].tick:checked::before {
+  transform: scale(1);
+}
+
+input[type='checkbox'].toggle {
+  appearance: none;
+  margin: 0;
+  font: inherit;
+  color: currentColor;
+  border: 0.15em solid currentColor;
+  border-radius: 1em;
+  display: grid;
+  place-content: center;
+  width: 60px;
+  height: 28px;
+  margin: 1px;
+  cursor: pointer;
+}
+
+input[type='checkbox'].toggle::before {
+  content: '';
+  width: 20px;
+  height: 20px;
+  transform: scale(1);
+  border-radius: 50%;
+  transition: 120ms all ease-in-out;
+  box-shadow: inset 1em 1em var(--form-control-color);
+  background-color: rgb(0, 0, 0);
+  transform: translateX(-16px);
+}
+
+input[type='checkbox'].toggle:checked::before {
+  transform: translateX(16px);
+  background-color: rgb(0, 0, 0);
+}
+
+input[type='radio'] {
+  appearance: none;
+  background-color: #fff;
+  margin: 0;
+  font: inherit;
+  color: currentColor;
+  width: 1.15em;
+  height: 1.15em;
+  border: 0.15em solid currentColor;
+  border-radius: 50%;
+  transform: translateY(-0.075em);
+  display: grid;
+  place-content: center;
+}
+
+input[type='radio']::before {
+  content: '';
+  width: 0.65em;
+  height: 0.65em;
+  border-radius: 50%;
+  transform: scale(0);
+  transition: 120ms transform ease-in-out;
+  box-shadow: inset 1em 1em var(--form-control-color);
+  background-color: rgb(0, 0, 0);
+}
+
+input[type='radio']:checked::before {
+  transform: scale(1);
+}
+
+.manipulate::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: black;
+  transform: translateX(-50%);
+}
+
+.module-screen {
+  width: 256px;
+  height: 320px;
+  position: relative;
+  background-color: #fafafa;
+  overflow: hidden;
+}
+
+.sequencer {
+  position: absolute;
+  top: 30px;
+  left: 0;
+  width: 100%;
+  height: 94px;
+}
+
+.background-line {
+  position: absolute;
+  background-color: black;
+}
+
+.background-line.active::before {
+  content: '';
+  position: absolute;
+  top: -7px;
+  left: -5px;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #ff0099;
+}
+
+.sequencer-dot {
+  opacity: 0.5;
+}
+
+.dot-1 {
+  background-color: #00ff0a;
+}
+
+.dot-2 {
+  background-color: #ff0099;
+}
+
+.dot-0 {
+  background-color: #00b2ff;
+}
+
+.dot-active {
+  display: block;
+}
+
+.dot-inactive {
+  display: none;
 }
