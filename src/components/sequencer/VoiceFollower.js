@@ -95,7 +95,7 @@ export default function VoiceFollower({ id, activeTick }) {
             }}
           />
           <label htmlFor="offset" className="mb-3">
-            Max Freq: {minFreq}
+            Min Freq: {minFreq}
           </label>
         </div>
         <div className="w-[80%] flex mx-auto justify-between">

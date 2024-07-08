@@ -23,6 +23,14 @@ export default function Sequencer() {
   const bpmRef = useRef(maxBpm / 2);
   useEffect(() => {
     bpmRef.current = bpm;
+    if (globalToggle) {
+      clearInterval(transportRef.current);
+      // Start up the sequencer...
+      transportRef.current = setInterval(() => {
+        activeTickRef.current = (activeTickRef.current + 1) % 16;
+        setActiveTick(activeTickRef.current);
+      }, (60 / bpmRef.current) * 1000);
+    }
   }, [bpm]);
   useEffect(() => {
     console.log('got some global midi', globalMidi);
