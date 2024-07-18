@@ -1,25 +1,38 @@
 import { useState, useEffect, useRef } from 'react';
 import { map } from '@/helpers/math';
 import axios from 'axios';
+const minOffsetConst = -20;
+const maxOffsetConst = 20;
+const offsetTypes = ['frequency', 'volume', 'duty'];
 
 export default function VoiceFollower({ id, activeTick }) {
   const [triangleVal, setTriangleVal] = useState(0);
   const [sineVal, setSineVal] = useState(0);
   const [squareVal, setSquareVal] = useState(0);
-  const [maxFreq, setMaxFreq] = useState(50);
-  const [minFreq, setMinFreq] = useState(-50);
+  const [maxOffset, setMaxOffset] = useState(maxOffsetConst / 2);
+  const [minOffset, setMinOffset] = useState(minOffsetConst / 2);
   const triangleValRef = useRef(0);
   const sineValRef = useRef(0);
   const squareValRef = useRef(0);
-  const maxFreqRef = useRef(50);
-  const minFreqRef = useRef(-50);
-  const canvasRef = useRef(null);
-  const ctxRef = useRef(null);
+  const maxOffsetRef = useRef(maxOffsetConst / 2);
+  const minOffsetRef = useRef(minOffsetConst / 2);
+  const offsetCanvasRef = useRef(null);
+  const offsetCtxRef = useRef(null);
   const activeTickRef = useRef(0);
   const waveArrRef = useRef([]);
+  const [offsetType, setOffsetType] = useState('frequency');
+  const offsetTypeRef = useRef('frequency');
+  const [frequencyOffset, setFrequencyOffset] = useState(0);
+  const frequencyOffsetRef = useRef(0);
   const updateWaveArr = () => {
-    for (let x = 0; x < ctxRef.current.canvas.width; x++) {
-      let mappedX = map(x, 0, ctxRef.current.canvas.width, 0, Math.PI * 2);
+    for (let x = 0; x < offsetCtxRef.current.canvas.width; x++) {
+      let mappedX = map(
+        x,
+        0,
+        offsetCtxRef.current.canvas.width,
+        0,
+        Math.PI * 2
+      );
       let p = Math.PI * 2;
       let yTriangle =
         2 *
@@ -31,7 +44,7 @@ export default function VoiceFollower({ id, activeTick }) {
       waveArrRef.current[x] = y;
     }
   };
-  const draw = (ctx) => {
+  const drawOffset = (ctx) => {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     //Our first draw
     ctx.strokeStyle = '#ffffff';
@@ -52,22 +65,22 @@ export default function VoiceFollower({ id, activeTick }) {
   useEffect(() => {
     activeTickRef.current = activeTick;
     // Fetch the appropriate element from waveArrRef
-    if (ctxRef.current) {
+    if (offsetCtxRef.current) {
       const waveAmount =
         waveArrRef.current[
-          Math.floor(activeTickRef.current * ctxRef.current.canvas.width)
+          Math.floor(activeTickRef.current * offsetCtxRef.current.canvas.width)
         ];
-      const freqShift = map(
+      const offsetShift = map(
         waveAmount,
         0,
         1,
-        minFreqRef.current,
-        maxFreqRef.current
+        minOffsetRef.current,
+        maxOffsetRef.current
       );
-      console.log('we should send some shit', freqShift);
+      console.log('we should send some shit', offsetShift);
       axios({
         method: 'post',
-        url: `http://localhost:1337/offset/${id}/${freqShift}`
+        url: `http://localhost:1337/${offsetTypeRef.current}/${id}/${offsetShift}`
       })
         .then((res) => {
           // console.log('got res', res);
@@ -78,11 +91,23 @@ export default function VoiceFollower({ id, activeTick }) {
     }
   }, [activeTick]);
   useEffect(() => {
-    const canvas = canvasRef.current;
+    axios({
+      method: 'post',
+      url: `http://localhost:1337/frequency/${id}/${frequencyOffset}`
+    })
+      .then((res) => {
+        console.log('got res', res);
+      })
+      .catch((err) => {
+        console.log('ERROR', err);
+      });
+  }, [frequencyOffset]);
+  useEffect(() => {
+    const canvas = offsetCanvasRef.current;
     const context = canvas.getContext('2d');
-    ctxRef.current = context;
-    draw(context);
-  }, [draw]);
+    offsetCtxRef.current = context;
+    drawOffset(context);
+  }, [drawOffset]);
   useEffect(() => {
     for (let i = 0; i < 1400; i++) {
       waveArrRef.current[i] = 0;
@@ -152,45 +177,86 @@ export default function VoiceFollower({ id, activeTick }) {
           <label htmlFor="midi" className="mb-3">
             Square: {squareVal}
           </label>
+          <select
+            name="offsetType"
+            className="w-full text-black"
+            onChange={(e) => {
+              console.log(e.target.value);
+              offsetTypeRef.current = e.target.value;
+              setOffsetType(offsetTypeRef.current);
+            }}
+          >
+            {offsetTypes.map((type) => {
+              return (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              );
+            })}
+          </select>
+          <label htmlFor="offsetType" className="mb-3">
+            Offset Type
+          </label>
+          {(offsetType === 'volume' || offsetType === 'duty') && (
+            <>
+              <input
+                type="range"
+                name="frequencyOffset"
+                min={minOffsetConst}
+                max={maxOffsetConst}
+                step="1"
+                value={frequencyOffset}
+                className="w-full"
+                onChange={(e) => {
+                  console.log('we should change...');
+                  frequencyOffsetRef.current = parseInt(e.target.value);
+                  setFrequencyOffset(frequencyOffsetRef.current);
+                }}
+              />
+              <label htmlFor="offset" className="mb-3">
+                Frequency Offset: {frequencyOffset}
+              </label>
+            </>
+          )}
           <input
             type="range"
             name="offset"
-            min={-100}
-            max={100}
+            min={minOffsetConst}
+            max={maxOffsetConst}
             step="1"
-            value={maxFreq}
+            value={maxOffset}
             className="w-full"
             onChange={(e) => {
               console.log('we should change...');
-              maxFreqRef.current = parseInt(e.target.value);
-              setMaxFreq(maxFreqRef.current);
+              maxOffsetRef.current = parseInt(e.target.value);
+              setMaxOffset(maxOffsetRef.current);
             }}
           />
           <label htmlFor="offset" className="mb-3">
-            Max Freq: {maxFreq}
+            Max Offset: {maxOffset}
           </label>
           <input
             type="range"
             name="offset"
-            min={-100}
-            max={100}
+            min={minOffsetConst}
+            max={maxOffsetConst}
             step="1"
-            value={minFreq}
+            value={minOffset}
             className="w-full"
             onChange={(e) => {
               console.log('we should change...');
-              minFreqRef.current = parseInt(e.target.value);
-              setMinFreq(minFreqRef.current);
+              minOffsetRef.current = parseInt(e.target.value);
+              setMinOffset(minOffsetRef.current);
             }}
           />
           <label htmlFor="offset" className="mb-3">
-            Min Freq: {minFreq}
+            Min Offset: {minOffset}
           </label>
         </div>
         <div className="w-[80%] flex mx-auto justify-between">
           <canvas
             className="w-full h-full"
-            ref={canvasRef}
+            ref={offsetCanvasRef}
             width={512}
             height={256}
           />

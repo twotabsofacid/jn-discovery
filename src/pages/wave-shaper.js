@@ -3,8 +3,8 @@ import axios from 'axios';
 import Voice from '@/components/wave-shaper/Voice';
 import VoiceFollower from '@/components/wave-shaper/VoiceFollower';
 
-const totalTicks = 100;
-const maxBpm = 16384;
+const maxBpm = 10;
+const totalTicks = 120;
 
 export default function WaveShaper() {
   const [activeTick, setActiveTick] = useState(0);
@@ -14,15 +14,26 @@ export default function WaveShaper() {
   const transportRef = useRef(null);
   const activeTickRef = useRef(0);
   const bpmRef = useRef(maxBpm / 2);
+  const incrementerRef = useRef(120 / (60 / maxBpm / 2 / 0.05));
+  // not bpm but... blocks per minute
+  // 1 block per minute means it goes through one whole block in a minute
+  // 60 blocks per minute means it goes through 60 blocks in a minute
+  // so the interval stays constant
+  // what changes is the modulus... or how much ur increasing
+  // the active tick by (e.g. for 1 blocks per minute
+  // you either have the modulus be 1000, or increase by 0.01)
   useEffect(() => {
     bpmRef.current = bpm;
+    incrementerRef.current = 120 / (60 / bpm / 0.05);
+    console.log(incrementerRef.current);
     if (globalToggle) {
       clearInterval(transportRef.current);
       // Start up the sequencer...
       transportRef.current = setInterval(() => {
-        activeTickRef.current = (activeTickRef.current + 1) % totalTicks;
+        activeTickRef.current =
+          (activeTickRef.current + incrementerRef.current) % totalTicks;
         setActiveTick(activeTickRef.current);
-      }, (60 / bpmRef.current) * 1000);
+      }, 50);
     }
   }, [bpm]);
   useEffect(() => {
@@ -64,9 +75,10 @@ export default function WaveShaper() {
     if (globalToggle) {
       // Start up the sequencer...
       transportRef.current = setInterval(() => {
-        activeTickRef.current = (activeTickRef.current + 1) % totalTicks;
+        activeTickRef.current =
+          (activeTickRef.current + incrementerRef.current) % totalTicks;
         setActiveTick(activeTickRef.current);
-      }, (60 / bpmRef.current) * 1000);
+      }, 50);
     }
   }, [globalToggle]);
   return (
@@ -91,15 +103,16 @@ export default function WaveShaper() {
         <input
           type="range"
           name="bpm"
-          min="1"
+          min="0.01"
+          step="0.01"
           className="w-full"
           max={maxBpm}
           onChange={(e) => {
-            setBpm(parseInt(e.target.value));
+            setBpm(parseFloat(e.target.value));
           }}
         />
         <label htmlFor="bpm" className="mb-3">
-          BPM: {bpm}
+          Blocks Per Minute: {bpm}
         </label>
       </section>
       <section className="flex flex-col">
