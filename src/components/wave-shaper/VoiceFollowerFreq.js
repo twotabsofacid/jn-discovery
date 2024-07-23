@@ -3,7 +3,6 @@ import { map } from '@/helpers/math';
 import axios from 'axios';
 const minOffsetConst = -20;
 const maxOffsetConst = 20;
-const offsetTypes = ['frequency', 'volume', 'duty'];
 
 export default function VoiceFollower({ id, activeTick }) {
   const [triangleVal, setTriangleVal] = useState(0);
@@ -22,8 +21,6 @@ export default function VoiceFollower({ id, activeTick }) {
   const offsetCtxRef = useRef(null);
   const activeTickRef = useRef(0);
   const waveArrRef = useRef([]);
-  const [offsetType, setOffsetType] = useState('frequency');
-  const offsetTypeRef = useRef('frequency');
   const [frequencyOffset, setFrequencyOffset] = useState(0);
   const frequencyOffsetRef = useRef(0);
   const updateWaveArr = () => {
@@ -76,14 +73,6 @@ export default function VoiceFollower({ id, activeTick }) {
     activeTickRef.current = activeTick;
     // Fetch the appropriate element from waveArrRef
     if (offsetCtxRef.current) {
-      // let mappedOffset = Math.floor(
-      //   map(waveOffsetRef.current, 0, 1, 0, ctx.canvas.width)
-      // );
-      // let newX = (activeTickRef.current + mappedOffset) % ctx.canvas.width;
-      // let y = waveArrRef.current[newX];
-      // To get the value we currently should be sending,
-      // we multiply the active tick (0, to 1) by
-      // the width of the canvas
       const mappedOffset = Math.floor(
         map(waveOffsetRef.current, 0, 1, 0, offsetCtxRef.current.canvas.width)
       );
@@ -101,12 +90,11 @@ export default function VoiceFollower({ id, activeTick }) {
         minOffsetRef.current,
         maxOffsetRef.current
       );
-      if (offsetTypeRef.current === 'duty') {
-        offsetShift = Math.floor(map(offsetShift, -20, 20, 1, 99));
-      }
+      // Add the base offset to this
+      offsetShift += frequencyOffsetRef.current;
       axios({
         method: 'post',
-        url: `http://localhost:1337/${offsetTypeRef.current}/${id}/${offsetShift}`
+        url: `http://localhost:1337/frequency/${id}/${offsetShift}`
       })
         .then((res) => {
           // console.log('got res', res);
@@ -116,18 +104,6 @@ export default function VoiceFollower({ id, activeTick }) {
         });
     }
   }, [activeTick]);
-  useEffect(() => {
-    axios({
-      method: 'post',
-      url: `http://localhost:1337/frequency/${id}/${frequencyOffset}`
-    })
-      .then((res) => {
-        console.log('got res', res);
-      })
-      .catch((err) => {
-        console.log('ERROR', err);
-      });
-  }, [frequencyOffset]);
   useEffect(() => {
     const canvas = offsetCanvasRef.current;
     const context = canvas.getContext('2d');
@@ -142,7 +118,7 @@ export default function VoiceFollower({ id, activeTick }) {
   return (
     <main className="h-auto flex flex-col m-3 p-3 border border-black">
       <div className="w-full flex justify-items-between pb-1 mb-6 border-b border-black">
-        <h1 className="text-xl font-bold">voice {id}</h1>
+        <h1 className="text-xl font-bold">voice {id}: Frequency Offset</h1>
       </div>
       <div className="flex w-full">
         <div className="w-[20%] px-3 flex flex-col justify-items-center items-center">
@@ -218,45 +194,22 @@ export default function VoiceFollower({ id, activeTick }) {
           <label htmlFor="waveoffset" className="mb-3">
             Wave Offset: {waveOffset}
           </label>
-          <select
-            name="offsetType"
-            className="w-full text-black"
+          <input
+            type="range"
+            name="frequencyOffset"
+            min={minOffsetConst}
+            max={maxOffsetConst}
+            step="1"
+            value={frequencyOffset}
+            className="w-full"
             onChange={(e) => {
-              offsetTypeRef.current = e.target.value;
-              setOffsetType(offsetTypeRef.current);
+              frequencyOffsetRef.current = parseInt(e.target.value);
+              setFrequencyOffset(frequencyOffsetRef.current);
             }}
-          >
-            {offsetTypes.map((type) => {
-              return (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              );
-            })}
-          </select>
-          <label htmlFor="offsetType" className="mb-3">
-            Offset Type
+          />
+          <label htmlFor="offset" className="mb-3">
+            Base Freq Offset: {frequencyOffset}
           </label>
-          {(offsetType === 'volume' || offsetType === 'duty') && (
-            <>
-              <input
-                type="range"
-                name="frequencyOffset"
-                min={minOffsetConst}
-                max={maxOffsetConst}
-                step="1"
-                value={frequencyOffset}
-                className="w-full"
-                onChange={(e) => {
-                  frequencyOffsetRef.current = parseInt(e.target.value);
-                  setFrequencyOffset(frequencyOffsetRef.current);
-                }}
-              />
-              <label htmlFor="offset" className="mb-3">
-                Frequency Offset: {frequencyOffset}
-              </label>
-            </>
-          )}
           <input
             type="range"
             name="offset"

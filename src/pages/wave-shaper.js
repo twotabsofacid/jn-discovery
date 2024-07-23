@@ -2,8 +2,11 @@ import { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import Voice from '@/components/wave-shaper/Voice';
 import VoiceFollower from '@/components/wave-shaper/VoiceFollower';
+import VoiceFollowerFreq from '@/components/wave-shaper/VoiceFollowerFreq';
+import VoiceFollowerDuty from '@/components/wave-shaper/VoiceFollowerDuty';
+import VoiceFollowerVolume from '@/components/wave-shaper/VoiceFollowerVolume';
 
-const maxBpm = 10;
+const maxBpm = 60;
 const totalTicks = 120;
 
 export default function WaveShaper() {
@@ -78,7 +81,7 @@ export default function WaveShaper() {
         activeTickRef.current =
           (activeTickRef.current + incrementerRef.current) % totalTicks;
         setActiveTick(activeTickRef.current);
-      }, 50);
+      }, 100);
     }
   }, [globalToggle]);
   return (
@@ -100,25 +103,43 @@ export default function WaveShaper() {
         >
           Stop All
         </button>
-        <input
-          type="range"
-          name="bpm"
-          min="0.01"
-          step="0.01"
-          className="w-full"
-          max={maxBpm}
-          onChange={(e) => {
-            setBpm(parseFloat(e.target.value));
-          }}
-        />
-        <label htmlFor="bpm" className="mb-3">
-          Blocks Per Minute: {bpm}
-        </label>
+        <section className="w-[60%]">
+          <input
+            type="range"
+            name="bpm"
+            min="0.01"
+            step="0.01"
+            className="w-full"
+            max={maxBpm}
+            onChange={(e) => {
+              setBpm(parseFloat(e.target.value));
+            }}
+          />
+          <label htmlFor="bpm" className="mb-3">
+            Blocks Per Minute: {bpm}
+          </label>
+          <h3>
+            Duration per block: {Math.floor(60 / bpm / 60)}:
+            {
+              ((60 / bpm / 60 - Math.floor(60 / bpm / 60)) * 0.6)
+                .toFixed(2)
+                .toString()
+                .split('.')[1]
+            }
+          </h3>
+        </section>
       </section>
       <section className="flex flex-col">
         <Voice id={0} globalMidi={globalMidi} setGlobalMidi={setGlobalMidi} />
-        <VoiceFollower id={1} activeTick={activeTick / totalTicks} />
-        <VoiceFollower id={2} activeTick={activeTick / totalTicks} />
+        <VoiceFollowerFreq id={0} activeTick={activeTick / totalTicks} />
+        <VoiceFollowerDuty id={0} activeTick={activeTick / totalTicks} />
+        <VoiceFollowerVolume id={0} activeTick={activeTick / totalTicks} />
+        <VoiceFollowerFreq id={1} activeTick={activeTick / totalTicks} />
+        <VoiceFollowerDuty id={1} activeTick={activeTick / totalTicks} />
+        <VoiceFollowerVolume id={1} activeTick={activeTick / totalTicks} />
+        <VoiceFollowerFreq id={2} activeTick={activeTick / totalTicks} />
+        <VoiceFollowerDuty id={2} activeTick={activeTick / totalTicks} />
+        <VoiceFollowerVolume id={2} activeTick={activeTick / totalTicks} />
       </section>
     </main>
   );

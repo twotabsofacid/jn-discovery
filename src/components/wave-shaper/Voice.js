@@ -20,7 +20,6 @@ export default function Voice({ id, globalMidi, setGlobalMidi }) {
             value={globalMidi}
             className="w-full"
             onChange={(e) => {
-              console.log('we should change...');
               setGlobalMidi(parseInt(e.target.value));
             }}
           />
