@@ -36,7 +36,7 @@ export default function WaveShaper() {
         activeTickRef.current =
           (activeTickRef.current + incrementerRef.current) % totalTicks;
         setActiveTick(activeTickRef.current);
-      }, 50);
+      }, 200);
     }
   }, [bpm]);
   useEffect(() => {
@@ -81,7 +81,7 @@ export default function WaveShaper() {
         activeTickRef.current =
           (activeTickRef.current + incrementerRef.current) % totalTicks;
         setActiveTick(activeTickRef.current);
-      }, 100);
+      }, 200);
     }
   }, [globalToggle]);
   return (
@@ -132,13 +132,13 @@ export default function WaveShaper() {
       <section className="flex flex-col">
         <Voice id={0} globalMidi={globalMidi} setGlobalMidi={setGlobalMidi} />
         <VoiceFollowerFreq id={0} activeTick={activeTick / totalTicks} />
-        <VoiceFollowerDuty id={0} activeTick={activeTick / totalTicks} />
+        {/* <VoiceFollowerDuty id={0} activeTick={activeTick / totalTicks} /> */}
         <VoiceFollowerVolume id={0} activeTick={activeTick / totalTicks} />
         <VoiceFollowerFreq id={1} activeTick={activeTick / totalTicks} />
-        <VoiceFollowerDuty id={1} activeTick={activeTick / totalTicks} />
+        {/* <VoiceFollowerDuty id={1} activeTick={activeTick / totalTicks} /> */}
         <VoiceFollowerVolume id={1} activeTick={activeTick / totalTicks} />
         <VoiceFollowerFreq id={2} activeTick={activeTick / totalTicks} />
-        <VoiceFollowerDuty id={2} activeTick={activeTick / totalTicks} />
+        {/* <VoiceFollowerDuty id={2} activeTick={activeTick / totalTicks} /> */}
         <VoiceFollowerVolume id={2} activeTick={activeTick / totalTicks} />
       </section>
     </main>

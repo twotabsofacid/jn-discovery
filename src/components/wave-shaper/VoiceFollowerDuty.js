@@ -21,6 +21,7 @@ export default function VoiceFollower({ id, activeTick }) {
   const offsetCtxRef = useRef(null);
   const activeTickRef = useRef(0);
   const waveArrRef = useRef([]);
+  const previousOffsetShift = useRef(0);
   const updateWaveArr = () => {
     for (let x = 0; x < offsetCtxRef.current.canvas.width; x++) {
       let mappedX = map(
@@ -88,16 +89,19 @@ export default function VoiceFollower({ id, activeTick }) {
         minOffsetRef.current,
         maxOffsetRef.current
       );
-      axios({
-        method: 'post',
-        url: `http://localhost:1337/duty/${id}/${offsetShift}`
-      })
-        .then((res) => {
-          // console.log('got res', res);
+      if (offsetShift !== previousOffsetShift.current) {
+        axios({
+          method: 'post',
+          url: `http://localhost:1337/duty/${id}/${offsetShift}`
         })
-        .catch((err) => {
-          console.log('ERROR', err);
-        });
+          .then((res) => {
+            // console.log('got res', res);
+          })
+          .catch((err) => {
+            console.log('ERROR', err);
+          });
+      }
+      previousOffsetShift.current = offsetShift;
     }
   }, [activeTick]);
   useEffect(() => {

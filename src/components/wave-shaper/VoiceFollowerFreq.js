@@ -23,6 +23,7 @@ export default function VoiceFollower({ id, activeTick }) {
   const waveArrRef = useRef([]);
   const [frequencyOffset, setFrequencyOffset] = useState(0);
   const frequencyOffsetRef = useRef(0);
+  const previousOffsetShift = useRef(0);
   const updateWaveArr = () => {
     for (let x = 0; x < offsetCtxRef.current.canvas.width; x++) {
       let mappedX = map(
@@ -92,16 +93,19 @@ export default function VoiceFollower({ id, activeTick }) {
       );
       // Add the base offset to this
       offsetShift += frequencyOffsetRef.current;
-      axios({
-        method: 'post',
-        url: `http://localhost:1337/frequency/${id}/${offsetShift}`
-      })
-        .then((res) => {
-          // console.log('got res', res);
+      if (offsetShift !== previousOffsetShift.current) {
+        axios({
+          method: 'post',
+          url: `http://localhost:1337/frequency/${id}/${offsetShift}`
         })
-        .catch((err) => {
-          console.log('ERROR', err);
-        });
+          .then((res) => {
+            // console.log('got res', res);
+          })
+          .catch((err) => {
+            console.log('ERROR', err);
+          });
+      }
+      previousOffsetShift.current = offsetShift;
     }
   }, [activeTick]);
   useEffect(() => {
