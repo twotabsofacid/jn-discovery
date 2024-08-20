@@ -4,7 +4,7 @@ import axios from 'axios';
 const minOffsetConst = -20;
 const maxOffsetConst = 20;
 
-export default function VoiceFollower({ id, activeTick }) {
+export default function VoiceFollower({ id, download, activeTick }) {
   const [triangleVal, setTriangleVal] = useState(0);
   const [sineVal, setSineVal] = useState(0);
   const [squareVal, setSquareVal] = useState(0);
@@ -24,19 +24,25 @@ export default function VoiceFollower({ id, activeTick }) {
   const [frequencyOffset, setFrequencyOffset] = useState(0);
   const frequencyOffsetRef = useRef(0);
   const previousOffsetShift = useRef(0);
+  const [duplicates, setDuplicates] = useState(1);
+  const duplicatesRef = useRef(1);
   const updateWaveArr = () => {
-    for (let x = 0; x < offsetCtxRef.current.canvas.width; x++) {
+    for (
+      let x = 0;
+      x < Math.round(offsetCtxRef.current.canvas.width / duplicatesRef.current);
+      x++
+    ) {
       let mappedX = map(
         x,
         0,
-        offsetCtxRef.current.canvas.width,
+        Math.round(offsetCtxRef.current.canvas.width / duplicatesRef.current),
         0,
         Math.PI * 2
       );
-      let p = Math.PI * 2;
+      let twoPi = Math.PI * 2;
       let yTriangle =
         map(
-          2 * Math.abs(mappedX / p - Math.floor(mappedX / p + 1 / 2)),
+          2 * Math.abs(mappedX / twoPi - Math.floor(mappedX / twoPi + 1 / 2)),
           0,
           1,
           -0.5,
@@ -47,6 +53,16 @@ export default function VoiceFollower({ id, activeTick }) {
       let y = yTriangle + ySine + ySquare;
       waveArrRef.current[x] = y;
     }
+    let newarr = [];
+    for (let x = 0; x < duplicatesRef.current; x++) {
+      newarr = newarr.concat(
+        ...waveArrRef.current.slice(
+          0,
+          Math.round(offsetCtxRef.current.canvas.width / duplicatesRef.current)
+        )
+      );
+    }
+    waveArrRef.current = newarr;
   };
   const drawOffset = (ctx) => {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -115,7 +131,35 @@ export default function VoiceFollower({ id, activeTick }) {
     drawOffset(context);
   }, [drawOffset]);
   useEffect(() => {
-    for (let i = 0; i < 1400; i++) {
+    if (download) {
+      let arr = waveArrRef.current.map((waveAmount) => {
+        return map(
+          waveAmount,
+          -0.5,
+          0.5,
+          minOffsetRef.current,
+          maxOffsetRef.current
+        );
+      });
+      let newarr = [];
+      const mappedOffset = Math.floor(map(waveOffsetRef.current, 0, 1, 0, 512));
+      for (let i = 0; i < 512; i++) {
+        newarr[i] = arr[(i + mappedOffset) % 512];
+      }
+      axios({
+        method: 'post',
+        url: `http://localhost:1337/download`,
+        data: {
+          id: id,
+          freq: newarr
+        }
+      }).then((res) => {
+        console.log(res.data.response);
+      });
+    }
+  }, [download]);
+  useEffect(() => {
+    for (let i = 0; i < 512; i++) {
       waveArrRef.current[i] = 0;
     }
   }, []);
@@ -245,6 +289,23 @@ export default function VoiceFollower({ id, activeTick }) {
           />
           <label htmlFor="offset" className="mb-3">
             Min Offset: {minOffset}
+          </label>
+          <input
+            type="range"
+            name="duplicates"
+            min={1}
+            max={10}
+            step="1"
+            value={duplicates}
+            className="w-full"
+            onChange={(e) => {
+              duplicatesRef.current = parseInt(e.target.value);
+              setDuplicates(duplicatesRef.current);
+              updateWaveArr();
+            }}
+          />
+          <label htmlFor="duplicates" className="mb-3">
+            Duplicates: {duplicates}
           </label>
         </div>
         <div className="w-[80%] flex mx-auto justify-between">

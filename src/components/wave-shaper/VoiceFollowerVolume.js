@@ -21,19 +21,25 @@ export default function VoiceFollower({ id, activeTick }) {
   const offsetCtxRef = useRef(null);
   const activeTickRef = useRef(0);
   const waveArrRef = useRef([]);
+  const [duplicates, setDuplicates] = useState(1);
+  const duplicatesRef = useRef(1);
   const updateWaveArr = () => {
-    for (let x = 0; x < offsetCtxRef.current.canvas.width; x++) {
+    for (
+      let x = 0;
+      x < Math.round(offsetCtxRef.current.canvas.width / duplicatesRef.current);
+      x++
+    ) {
       let mappedX = map(
         x,
         0,
-        offsetCtxRef.current.canvas.width,
+        Math.round(offsetCtxRef.current.canvas.width / duplicatesRef.current),
         0,
         Math.PI * 2
       );
-      let p = Math.PI * 2;
+      let twoPi = Math.PI * 2;
       let yTriangle =
         map(
-          2 * Math.abs(mappedX / p - Math.floor(mappedX / p + 1 / 2)),
+          2 * Math.abs(mappedX / twoPi - Math.floor(mappedX / twoPi + 1 / 2)),
           0,
           1,
           -0.5,
@@ -44,6 +50,25 @@ export default function VoiceFollower({ id, activeTick }) {
       let y = yTriangle + ySine + ySquare;
       waveArrRef.current[x] = y;
     }
+    let newarr = [];
+    for (let x = 0; x < duplicatesRef.current; x++) {
+      newarr = newarr.concat(
+        ...waveArrRef.current.slice(
+          0,
+          Math.round(offsetCtxRef.current.canvas.width / duplicatesRef.current)
+        )
+      );
+    }
+    waveArrRef.current = newarr;
+    // for (let x = 0; x < offsetCtxRef.current.canvas.width; x++) {
+    //   waveArrRef.current[x] =
+    //     waveArrRef.current[
+    //       x %
+    //         Math.round(
+    //           offsetCtxRef.current.canvas.width / duplicatesRef.current
+    //         )
+    //     ];
+    // }
   };
   const drawOffset = (ctx) => {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -107,7 +132,7 @@ export default function VoiceFollower({ id, activeTick }) {
     drawOffset(context);
   }, [drawOffset]);
   useEffect(() => {
-    for (let i = 0; i < 1400; i++) {
+    for (let i = 0; i < 512; i++) {
       waveArrRef.current[i] = 0;
     }
   }, []);
@@ -221,6 +246,23 @@ export default function VoiceFollower({ id, activeTick }) {
           />
           <label htmlFor="offset" className="mb-3">
             Min Volume: {minOffset}
+          </label>
+          <input
+            type="range"
+            name="duplicates"
+            min={1}
+            max={10}
+            step="1"
+            value={duplicates}
+            className="w-full"
+            onChange={(e) => {
+              duplicatesRef.current = parseInt(e.target.value);
+              setDuplicates(duplicatesRef.current);
+              updateWaveArr();
+            }}
+          />
+          <label htmlFor="duplicates" className="mb-3">
+            Duplicates: {duplicates}
           </label>
         </div>
         <div className="w-[80%] flex mx-auto justify-between">

@@ -11,6 +11,9 @@ export default function Home() {
       <Link href="wave-shaper" className="text-xl underline py-4">
         Wave Shaper
       </Link>
+      <Link href="morpher" className="text-xl underline py-4">
+        Morpher
+      </Link>
     </main>
   );
 }
